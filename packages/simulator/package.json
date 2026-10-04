@@ -1,0 +1,11 @@
+{
+  "name": "@invisi-play/simulator",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": "./src/index.ts",
+  "dependencies": {
+    "@invisi-play/input-core": "0.1.0",
+    "@invisi-play/protocol": "0.1.0"
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "name": "invisi-play",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": ["apps/*", "packages/*", "games/*"],
+  "scripts": {
+    "dev": "npm run dev -w @invisi-play/web",
+    "build": "npm run build -w @invisi-play/web",
+    "typecheck": "npm run typecheck -w @invisi-play/web",
+    "test": "npm run test -ws --if-present"
+  },
+  "engines": {"node": ">=20"}
+}

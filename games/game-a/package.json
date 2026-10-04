@@ -1,0 +1,12 @@
+{
+  "name": "@invisi-play/game-a",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": "./src/index.tsx",
+  "dependencies": {
+    "@babylonjs/core": "^9.28.0",
+    "@invisi-play/game-sdk": "0.1.0",
+    "react": "^19.3.0"
+  }
+}

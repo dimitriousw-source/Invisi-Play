@@ -1,0 +1,27 @@
+{
+  "name": "@invisi-play/web",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0",
+    "build": "vite build",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@invisi-play/game-a": "0.1.0",
+    "@invisi-play/game-sdk": "0.1.0",
+    "@invisi-play/input-core": "0.1.0",
+    "@invisi-play/protocol": "0.1.0",
+    "@invisi-play/simulator": "0.1.0",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.1.1",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.2"
+  }
+}
