@@ -1,5 +1,5 @@
 {
-  "name": "@invisi-play/web",
+  "name": "invisi-play-web",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -9,13 +9,10 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@invisi-play/game-a": "file:../../games/game-a",
-    "@invisi-play/game-sdk": "file:../../packages/game-sdk",
-    "@invisi-play/input-core": "file:../../packages/input-core",
-    "@invisi-play/protocol": "file:../../packages/protocol",
-    "@invisi-play/simulator": "file:../../packages/simulator",
+    "@babylonjs/core": "^9.28.0",
     "react": "^19.3.0",
-    "react-dom": "^19.3.0"
+    "react-dom": "^19.3.0",
+    "zod": "^4.6.5"
   },
   "devDependencies": {
     "@types/react": "^19.3.0",
@@ -23,5 +20,8 @@
     "@vitejs/plugin-react": "^6.1.1",
     "typescript": "^7.0.2",
     "vite": "^8.3.2"
+  },
+  "engines": {
+    "node": ">=22.12.0"
   }
 }

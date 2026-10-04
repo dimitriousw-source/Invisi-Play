@@ -15,7 +15,11 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Install
+      - name: Install root
         run: npm install
-      - name: Build
+      - name: Build root
         run: npm run build
+      - name: Install apps/web
+        run: npm install --prefix apps/web
+      - name: Build apps/web
+        run: npm run build --prefix apps/web
