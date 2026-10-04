@@ -5,7 +5,7 @@
   "type": "module",
   "exports": "./src/index.ts",
   "dependencies": {
-    "@invisi-play/input-core": "0.1.0",
-    "@invisi-play/protocol": "0.1.0"
+    "@invisi-play/input-core": "file:../input-core",
+    "@invisi-play/protocol": "file:../protocol"
   }
 }

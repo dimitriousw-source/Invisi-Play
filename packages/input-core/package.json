@@ -4,5 +4,7 @@
   "private": true,
   "type": "module",
   "exports": "./src/index.ts",
-  "dependencies": {"@invisi-play/protocol": "0.1.0"}
+  "dependencies": {
+    "@invisi-play/protocol": "file:../protocol"
+  }
 }

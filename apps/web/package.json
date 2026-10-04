@@ -9,11 +9,11 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@invisi-play/game-a": "0.1.0",
-    "@invisi-play/game-sdk": "0.1.0",
-    "@invisi-play/input-core": "0.1.0",
-    "@invisi-play/protocol": "0.1.0",
-    "@invisi-play/simulator": "0.1.0",
+    "@invisi-play/game-a": "file:../../games/game-a",
+    "@invisi-play/game-sdk": "file:../../packages/game-sdk",
+    "@invisi-play/input-core": "file:../../packages/input-core",
+    "@invisi-play/protocol": "file:../../packages/protocol",
+    "@invisi-play/simulator": "file:../../packages/simulator",
     "react": "^19.3.0",
     "react-dom": "^19.3.0"
   },

@@ -6,7 +6,7 @@
   "exports": "./src/index.tsx",
   "dependencies": {
     "@babylonjs/core": "^9.28.0",
-    "@invisi-play/game-sdk": "0.1.0",
+    "@invisi-play/game-sdk": "file:../../packages/game-sdk",
     "react": "^19.3.0"
   }
 }
