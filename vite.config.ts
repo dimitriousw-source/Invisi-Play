@@ -7,6 +7,7 @@ const root = path.dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
   plugins: [react()],
+  publicDir: path.resolve(root, "apps/web/public"),
   resolve: {
     alias: {
       "@invisi-play/protocol": path.resolve(root, "packages/protocol/src/index.ts"),
