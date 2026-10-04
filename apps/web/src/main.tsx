@@ -24,6 +24,11 @@ function App() {
     setSource(next);
   };
 
+  const startGame = () => {
+    selectSource("keyboard");
+    setPage("game");
+  };
+
   if (page === "game") {
     return (
       <main className="full-screen">
@@ -49,7 +54,7 @@ function App() {
       </header>
 
       {page === "home" ? (
-        <Home onPlay={() => setPage("game")} onLab={() => setPage("lab")} />
+        <Home onPlay={startGame} onLab={() => setPage("lab")} />
       ) : (
         <Lab
           frame={frame}

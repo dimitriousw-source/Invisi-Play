@@ -80,8 +80,10 @@ export class KeyboardSource {
   }
 
   private onKeyDown = (event: KeyboardEvent) => {
-    if (["ArrowUp", "ArrowLeft", "ArrowRight", " "].includes(event.key)) {
+    const gameKeys = ["w", "W", "a", "A", "d", "D", "ArrowUp", "ArrowLeft", "ArrowRight", "Shift", " ", "c", "C", "e", "E"];
+    if (gameKeys.includes(event.key)) {
       event.preventDefault();
+      this.engine.setActiveSource("keyboard");
     }
     this.keys.add(event.key);
     this.recompute();
