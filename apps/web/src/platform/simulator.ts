@@ -71,34 +71,67 @@ export class KeyboardSource {
   constructor(private readonly engine: InputEngine) {
     window.addEventListener("keydown", this.onKeyDown, { passive: false });
     window.addEventListener("keyup", this.onKeyUp, { passive: false });
+    window.addEventListener("blur", this.resetKeys);
+    document.addEventListener("visibilitychange", this.onVisibilityChange);
     this.publish();
   }
 
   destroy() {
     window.removeEventListener("keydown", this.onKeyDown);
     window.removeEventListener("keyup", this.onKeyUp);
+    window.removeEventListener("blur", this.resetKeys);
+    document.removeEventListener("visibilitychange", this.onVisibilityChange);
+  }
+
+  private isGameKey(code: string) {
+    return [
+      "KeyW",
+      "KeyA",
+      "KeyD",
+      "ArrowUp",
+      "ArrowLeft",
+      "ArrowRight",
+      "ShiftLeft",
+      "ShiftRight",
+      "Space",
+      "KeyC",
+      "KeyE",
+    ].includes(code);
   }
 
   private onKeyDown = (event: KeyboardEvent) => {
-    const gameKeys = ["w", "W", "a", "A", "d", "D", "ArrowUp", "ArrowLeft", "ArrowRight", "Shift", " ", "c", "C", "e", "E"];
-    if (gameKeys.includes(event.key)) {
-      event.preventDefault();
-      this.engine.setActiveSource("keyboard");
-    }
-    this.keys.add(event.key);
+    if (!this.isGameKey(event.code)) return;
+
+    event.preventDefault();
+    this.engine.setActiveSource("keyboard");
+    this.keys.add(event.code);
     this.recompute();
   };
 
   private onKeyUp = (event: KeyboardEvent) => {
-    this.keys.delete(event.key);
+    if (!this.isGameKey(event.code)) return;
+
+    event.preventDefault();
+    this.keys.delete(event.code);
     this.recompute();
   };
 
+  private resetKeys = () => {
+    if (this.keys.size === 0) return;
+    this.keys.clear();
+    this.recompute();
+  };
+
+  private onVisibilityChange = () => {
+    if (document.hidden) this.resetKeys();
+  };
+
   private recompute() {
-    const forward = this.has("w") || this.has("ArrowUp") ? 1 : 0;
-    const left = this.has("a") || this.has("ArrowLeft");
-    const right = this.has("d") || this.has("ArrowRight");
+    const forward = this.has("KeyW", "ArrowUp") ? 1 : 0;
+    const left = this.has("KeyA", "ArrowLeft");
+    const right = this.has("KeyD", "ArrowRight");
     const previous = this.frame;
+
     const button = (name: ButtonName, down: boolean) =>
       nextButton(previous.buttons[name].down, down);
 
@@ -111,18 +144,19 @@ export class KeyboardSource {
         turn: left === right ? 0 : left ? -1 : 1,
       },
       buttons: {
-        run: button("run", this.has("Shift")),
-        jump: button("jump", this.has(" ")),
-        crouch: button("crouch", this.has("c")),
-        interact: button("interact", this.has("e")),
+        run: button("run", this.has("ShiftLeft", "ShiftRight")),
+        jump: button("jump", this.has("Space")),
+        crouch: button("crouch", this.has("KeyC")),
+        interact: button("interact", this.has("KeyE")),
       },
       quality: { overall: 1, ageMs: 0 },
     };
+
     this.publish();
   }
 
-  private has(key: string) {
-    return this.keys.has(key) || this.keys.has(key.toUpperCase());
+  private has(...codes: string[]) {
+    return codes.some((code) => this.keys.has(code));
   }
 
   private publish() {
