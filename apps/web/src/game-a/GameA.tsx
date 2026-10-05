@@ -198,7 +198,7 @@ export default function GameA({
           const env = await SceneLoader.ImportMeshAsync(
             "",
             "/assets/models/environment/sunscale-reach/",
-            "sunscale_reach_v001.glb",
+            "sunscale_reach_v002.glb",
             scene,
           );
 
@@ -231,7 +231,7 @@ export default function GameA({
           const imported = await SceneLoader.ImportMeshAsync(
             "",
             "/assets/models/champions/shelvora/",
-            "shelvora_v001.glb",
+            "shelvora_v002.glb",
             scene,
           );
 
@@ -656,7 +656,9 @@ function createSurfaceTexture(
   for (let y = 18; y < 256; y += 43) {
     context.beginPath();
     context.moveTo(0, y);
-    context.bezierCurveTo(64, y - 8, 160, y + 11, 256, y - 2);
+    context.lineTo(64, y - 8);
+    context.lineTo(160, y + 11);
+    context.lineTo(256, y - 2);
     context.stroke();
   }
   context.globalAlpha = 1;
