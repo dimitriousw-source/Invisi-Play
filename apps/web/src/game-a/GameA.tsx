@@ -53,6 +53,7 @@ export default function GameA({
       antialias: true,
     });
     const scene = new Scene(engine);
+    scene.collisionsEnabled = true;
     scene.clearColor = Color4.FromHexString(`${region.palette.sky}ff`);
 
     const camera = new ArcRotateCamera(
@@ -68,6 +69,8 @@ export default function GameA({
     camera.maxZ = 220;
     camera.fov = 0.84;
     camera.inertia = 0;
+    camera.checkCollisions = true;
+    camera.collisionRadius = new Vector3(0.28, 0.28, 0.28);
 
     const hemi = new HemisphericLight("hemi", new Vector3(0, 1, 0), scene);
     hemi.intensity = 0.78;
@@ -109,6 +112,17 @@ export default function GameA({
     }
 
     const playerRoot = new TransformNode("playerRoot", scene);
+    const playerCollider = MeshBuilder.CreateCapsule(
+      "playerCollider",
+      { height: 1.35, radius: 0.5, tessellation: 12 },
+      scene,
+    );
+    playerCollider.isVisible = false;
+    playerCollider.isPickable = false;
+    playerCollider.checkCollisions = true;
+    playerCollider.ellipsoid = new Vector3(0.52, 0.62, 0.52);
+    playerCollider.ellipsoidOffset = new Vector3(0, 0.62, 0);
+
     let visualRoot: TransformNode | null = null;
     let animator: ChampionAnimator | null = null;
     let shrinePosition = new Vector3(0, 0, 11);
@@ -120,6 +134,7 @@ export default function GameA({
     let lastJumpSequence = -1;
     let lastInteractSequence = -1;
     let completed = false;
+    let worldReady = false;
 
     let cameraYawOffset = 0;
     let cameraBetaTarget = 1.03;
@@ -205,6 +220,9 @@ export default function GameA({
           env.meshes.forEach((mesh) => {
             mesh.receiveShadows = true;
             if (mesh.name !== "__root__") shadows.addShadowCaster(mesh, true);
+            if (shouldBlockChampion(mesh.name)) {
+              mesh.checkCollisions = true;
+            }
           });
 
           tuneImportedMaterials(scene, sandTexture, stoneTexture);
@@ -231,7 +249,7 @@ export default function GameA({
           const imported = await SceneLoader.ImportMeshAsync(
             "",
             "/assets/models/champions/shelvora/",
-            "shelvora_v002.glb",
+            "shelvora_v003.glb",
             scene,
           );
 
@@ -257,6 +275,10 @@ export default function GameA({
           visualRoot.parent = playerRoot;
         }
 
+        playerCollider.position.set(0, 0.02, 0);
+        playerRoot.position.copyFrom(playerCollider.position);
+        worldReady = true;
+
         if (!disposed) setAssetLabel("");
       } catch (error) {
         console.error("[GameA] asset load failed", error);
@@ -270,6 +292,10 @@ export default function GameA({
           createFallbackEnvironment(scene, region);
         }
 
+        playerCollider.position.set(0, 0.02, 0);
+        playerRoot.position.copyFrom(playerCollider.position);
+        worldReady = true;
+
         if (!disposed) setAssetLabel("Using fallback assets");
       }
     };
@@ -279,23 +305,42 @@ export default function GameA({
     engine.runRenderLoop(() => {
       if (disposed) return;
       const dt = Math.min(engine.getDeltaTime() / 1000, 0.05);
+
+      if (!worldReady) {
+        scene.render();
+        return;
+      }
+
       const frame = controller.getFrame();
 
-      const targetSpeed = frame.axes.forward * (frame.buttons.run.down ? 6.0 : 3.0);
-      const accel = targetSpeed > currentSpeed ? 7.5 : 10.5;
+      const targetSpeed =
+        frame.axes.forward * (frame.buttons.run.down ? 3.9 : 1.85);
+      const accel = targetSpeed > currentSpeed ? 5.5 : 8.5;
       currentSpeed = Scalar.Lerp(
         currentSpeed,
         targetSpeed,
         1 - Math.exp(-accel * dt),
       );
 
-      playerRoot.rotation.y += frame.axes.turn * 1.9 * dt;
+      playerRoot.rotation.y += frame.axes.turn * 1.65 * dt;
+      playerCollider.rotation.y = playerRoot.rotation.y;
+
       const forward = new Vector3(
         Math.sin(playerRoot.rotation.y),
         0,
         Math.cos(playerRoot.rotation.y),
       );
-      playerRoot.position.addInPlace(forward.scale(currentSpeed * dt));
+      const requestedHorizontal = forward.scale(currentSpeed * dt);
+      const beforeHorizontal = playerCollider.position.clone();
+      playerCollider.moveWithCollisions(requestedHorizontal);
+      const actualHorizontal = playerCollider.position.subtract(beforeHorizontal);
+
+      if (
+        requestedHorizontal.lengthSquared() > 0.000001 &&
+        actualHorizontal.length() < requestedHorizontal.length() * 0.18
+      ) {
+        currentSpeed *= Math.max(0, 1 - 8 * dt);
+      }
 
       if (
         frame.buttons.jump.pressed &&
@@ -309,20 +354,37 @@ export default function GameA({
       }
 
       verticalVelocity -= 12.2 * dt;
-      playerRoot.position.y += verticalVelocity * dt;
-      if (playerRoot.position.y <= 0) {
-        playerRoot.position.y = 0;
+      const requestedVertical = verticalVelocity * dt;
+      const beforeVerticalY = playerCollider.position.y;
+      playerCollider.moveWithCollisions(new Vector3(0, requestedVertical, 0));
+      const actualVertical = playerCollider.position.y - beforeVerticalY;
+
+      grounded =
+        verticalVelocity <= 0 &&
+        Math.abs(actualVertical - requestedVertical) > 0.0025;
+
+      if (grounded && verticalVelocity < 0) {
         verticalVelocity = 0;
-        grounded = true;
       }
+
+      playerRoot.position.copyFrom(playerCollider.position);
 
       if (!wasGrounded && grounded) animator?.playOnce("Land");
       wasGrounded = grounded;
 
       if (animator && !animator.isBusy() && grounded) {
         if (frame.buttons.crouch.down) animator.playLoop("GuardHold");
-        else if (currentSpeed > 4.0) animator.playLoop("Run", 1.05);
-        else if (currentSpeed > 0.15) animator.playLoop("Walk", 1.0);
+        else if (Math.abs(currentSpeed) > 2.7) {
+          animator.playLoop(
+            "Run",
+            Scalar.Clamp(Math.abs(currentSpeed) / 3.55, 0.9, 1.18),
+          );
+        } else if (Math.abs(currentSpeed) > 0.1) {
+          animator.playLoop(
+            "Walk",
+            Scalar.Clamp(Math.abs(currentSpeed) / 1.65, 0.72, 1.18),
+          );
+        }
         else if (Math.abs(frame.axes.turn) > 0.15) {
           animator.playLoop(frame.axes.turn < 0 ? "TurnLeft" : "TurnRight");
         } else {
@@ -749,6 +811,28 @@ function setShelvoraRelicGlow(scene: Scene, strength: number) {
   }
 }
 
+function shouldBlockChampion(name: string) {
+  const value = name.toLowerCase();
+  return [
+    "terrain",
+    "mesa_",
+    "ledge_",
+    "boulder_",
+    "gatepillar",
+    "gatefoot",
+    "gatewing",
+    "gatelintel",
+    "gatetopbroken",
+    "totembase",
+    "totemhead",
+    "jade_",
+    "shrine_platform",
+    "shrine_inner",
+    "shrine_center",
+    "shrinefin",
+  ].some((token) => value.includes(token));
+}
+
 function material(scene: Scene, name: string, hex: string) {
   const mat = new StandardMaterial(name, scene);
   mat.diffuseColor = Color3.FromHexString(hex);
@@ -763,6 +847,7 @@ function createFallbackEnvironment(scene: Scene, region: RegionDefinition) {
     scene,
   );
   ground.material = material(scene, "groundMat", region.palette.ground);
+  ground.checkCollisions = true;
 
   const path = MeshBuilder.CreateGround(
     "path",
